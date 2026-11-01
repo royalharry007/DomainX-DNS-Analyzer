@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DomainX | DNS Analyzer</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <nav class="navbar">
+        <div class="logo">🌐 DomainX</div>
+        <span class="nav-status">DNS Analyzer</span>
+    </nav>
+
+    <main class="container">
+
+        <section class="hero">
+            <span class="tag">DOMAIN INTELLIGENCE TOOL</span>
+            <h1>Domain & DNS Analyzer</h1>
+            <p>Analyze domain configuration, inspect DNS records
+                and identify common domain issues.</p>
+        </section>
+
+        <section class="search-card">
+
+            <label for="domainInput">Enter Domain Name</label>
+
+            <div class="search-box">
+                <input type="text" id="domainInput" placeholder="e.g. google.com">
+
+                <button id="analyzeBtn">
+                    Analyze Domain
+                </button>
+            </div>
+
+            <p class="hint">
+                Enter a domain without https:// or www.
+            </p>
+
+            <p id="message"></p>
+
+        </section>
+
+        <section class="dashboard">
+
+            <h2>Analysis Overview</h2>
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+                    <span>🌐</span>
+                    <h3 id="domainStatus">--</h3>
+                    <p>Domain Status</p>
+                </div>
+
+                <div class="stat-card">
+                    <span>📡</span>
+                    <h3 id="recordsCount">--</h3>
+                    <p>DNS Records</p>
+                </div>
+
+                <div class="stat-card">
+                    <span>🖥️</span>
+                    <h3 id="nameserverCount">--</h3>
+                    <p>Nameservers</p>
+                </div>
+
+                <div class="stat-card">
+                    <span>⚠️</span>
+                    <h3 id="errorCount">--</h3>
+                    <p>Lookup Errors</p>
+                </div>
+
+            </div>
+
+        </section>
+
+        <section class="records-section">
+
+            <h2>DNS Records</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Record Type</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody id="recordsTable">
+                    <tr>
+                        <td colspan="3">
+                            Enter a domain to view DNS records.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </section>
+
+        <section class="email-security-section">
+
+            <h2>Email Security Analysis</h2>
+
+            <div class="security-grid">
+
+                <div class="security-card">
+                    <h3>SPF Status</h3>
+                    <p id="spfStatus">Not checked</p>
+                    <p id="spfRecord">--</p>
+                </div>
+
+                <div class="security-card">
+                    <h3>DMARC Status</h3>
+                    <p id="dmarcStatus">Not checked</p>
+                    <p id="dmarcPolicy">Policy: --</p>
+                    <p id="dmarcRecord">--</p>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <section class="report-section">
+            <h2>Diagnostic Report</h2>
+            <button id="downloadReportBtn" disabled>
+                Download PDF Report
+            </button>
+
+            <div id="diagnosticReport">
+                Your diagnostic report will appear here.
+            </div>
+        </section>
+
+
+    </main>
+
+    <footer>
+        © 2026 DomainX. Domain diagnostics made simple.
+    </footer>
+
+    
+    <script src="/vendor/jspdf.umd.min.js"></script>
+    <script src="script.js"></script>
+
+</body>
+
+</html>
