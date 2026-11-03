@@ -1,13 +1,31 @@
 
-
 const analyzeBtn = document.getElementById("analyzeBtn");
 const domainInput = document.getElementById("domainInput");
 const message = document.getElementById("message");
+
 let latestDNSData = null;
+
+// Function to display colored messages
+function showMessage(text, type) {
+    message.textContent = text;
+
+    if (type === "success") {
+        message.style.color = "#16a34a";
+    } 
+    else if (type === "error") {
+        message.style.color = "#dc2626";
+    } 
+    else if (type === "warning") {
+        message.style.color = "#d97706";
+    } 
+    else {
+        message.style.color = "#334155";
+    }
+}
 
 analyzeBtn.addEventListener("click", analyzeDomain);
 
-// Also allow analysis by pressing Enter
+// Allow analysis by pressing Enter
 domainInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
         analyzeDomain();
@@ -18,13 +36,14 @@ async function analyzeDomain() {
     const domain = domainInput.value.trim().toLowerCase();
 
     if (!domain) {
-        message.textContent = "Please enter a domain name.";
+        showMessage("Please enter a domain name.", "warning");
         return;
     }
 
     analyzeBtn.textContent = "Analyzing...";
     analyzeBtn.disabled = true;
-    message.textContent = "Fetching DNS records...";
+
+    showMessage("Fetching DNS records...", "");
 
     try {
         const response = await fetch(
@@ -39,13 +58,50 @@ async function analyzeDomain() {
 
         displayResults(result.data);
 
-        message.textContent = "DNS analysis completed successfully.";
+        const data = result.data;
+
+        const recordTypes = ["A", "AAAA", "MX", "NS", "CNAME", "TXT"];
+
+        const totalRecords = recordTypes.reduce(
+            (total, type) => total + (data[type]?.length || 0),
+            0
+        );
+
+        const totalErrors = data.errors?.length || 0;
+
+        // Display the appropriate colored message
+        if (totalRecords > 0) {
+            showMessage(
+                "DNS analysis completed successfully.",
+                "success"
+            );
+        } else if (totalErrors > 0) {
+            showMessage(
+                "DNS lookup failed. Please verify the domain name.",
+                "error"
+            );
+        } else {
+            showMessage(
+                "No DNS records were found for this domain.",
+                "warning"
+            );
+        }
 
     } catch (error) {
-        message.textContent = error.message;
+        latestDNSData = null;
+
+        document.getElementById("downloadReportBtn").disabled = true;
+
+        showMessage(
+            error.message || "Unable to analyze this domain.",
+            "error"
+        );
+
         document.getElementById("domainStatus").textContent = "Error";
+
         document.getElementById("diagnosticReport").textContent =
-            "Unable to complete the DNS analysis. Check the domain name and try again.";
+            "Unable to complete DNS analysis. Please check the domain name and try again.";
+
     } finally {
         analyzeBtn.textContent = "Analyze Domain";
         analyzeBtn.disabled = false;
@@ -54,18 +110,26 @@ async function analyzeDomain() {
 
 
 function displayResults(data) {
+
     // Store latest DNS results
     latestDNSData = data;
 
-    // Enable PDF button
+    // Enable PDF download
     document.getElementById("downloadReportBtn").disabled = false;
+
+    // Safely get DNS record arrays
+    const A = data.A || [];
+    const AAAA = data.AAAA || [];
+    const MX = data.MX || [];
+    const NS = data.NS || [];
+    const CNAME = data.CNAME || [];
+    const TXT = data.TXT || [];
+    const errors = data.errors || [];
 
     const records = [];
 
-  
-
     // A records
-    data.A.forEach(value => {
+    A.forEach(value => {
         records.push({
             type: "A",
             description: "IPv4 Address",
@@ -74,7 +138,7 @@ function displayResults(data) {
     });
 
     // AAAA records
-    data.AAAA.forEach(value => {
+    AAAA.forEach(value => {
         records.push({
             type: "AAAA",
             description: "IPv6 Address",
@@ -83,7 +147,7 @@ function displayResults(data) {
     });
 
     // MX records
-    data.MX.forEach(value => {
+    MX.forEach(value => {
         records.push({
             type: "MX",
             description: `Mail Server (Priority: ${value.priority})`,
@@ -92,7 +156,7 @@ function displayResults(data) {
     });
 
     // NS records
-    data.NS.forEach(value => {
+    NS.forEach(value => {
         records.push({
             type: "NS",
             description: "Nameserver",
@@ -101,7 +165,7 @@ function displayResults(data) {
     });
 
     // CNAME records
-    data.CNAME.forEach(value => {
+    CNAME.forEach(value => {
         records.push({
             type: "CNAME",
             description: "Canonical Name",
@@ -110,7 +174,7 @@ function displayResults(data) {
     });
 
     // TXT records
-    data.TXT.forEach(value => {
+    TXT.forEach(value => {
         records.push({
             type: "TXT",
             description: "Text Record",
@@ -119,19 +183,26 @@ function displayResults(data) {
     });
 
     // Update dashboard statistics
-    document.getElementById("domainStatus").textContent =
-        records.length > 0 ? "Active" : "No records";
+    let status = "No records";
+
+    if (records.length > 0) {
+        status = "Active";
+    } else if (errors.length > 0) {
+        status = "Lookup failed";
+    }
+
+    document.getElementById("domainStatus").textContent = status;
 
     document.getElementById("recordsCount").textContent =
         records.length;
 
     document.getElementById("nameserverCount").textContent =
-        data.NS.length;
+        NS.length;
 
     document.getElementById("errorCount").textContent =
-        data.errors.length;
+        errors.length;
 
-    // Display records in table
+    // Display DNS records in table
     const tableBody = document.getElementById("recordsTable");
     tableBody.replaceChildren();
 
@@ -167,42 +238,40 @@ function displayResults(data) {
 
     report.textContent =
         `Domain: ${data.domain}\n\n` +
-        `A Records: ${data.A.length}\n` +
-        `AAAA Records: ${data.AAAA.length}\n` +
-        `MX Records: ${data.MX.length}\n` +
-        `NS Records: ${data.NS.length}\n` +
-        `CNAME Records: ${data.CNAME.length}\n` +
-        `TXT Records: ${data.TXT.length}\n` +
-        `Lookup Errors: ${data.errors.length}\n\n` +
+        `A Records: ${A.length}\n` +
+        `AAAA Records: ${AAAA.length}\n` +
+        `MX Records: ${MX.length}\n` +
+        `NS Records: ${NS.length}\n` +
+        `CNAME Records: ${CNAME.length}\n` +
+        `TXT Records: ${TXT.length}\n` +
+        `Lookup Errors: ${errors.length}\n\n` +
         "DNS analysis completed.";
 
-        
     // Display Email Security Results
-    const security = data.emailSecurity;
+    const security = data.emailSecurity || {};
+
+    const SPF = security.SPF || {};
+    const DMARC = security.DMARC || {};
 
     document.getElementById("spfStatus").textContent =
-        security.SPF.found ? "SPF Detected" : "SPF Not Found";
+        SPF.found ? "SPF Detected" : "SPF Not Found";
 
     document.getElementById("spfRecord").textContent =
-        security.SPF.record || "No SPF record available.";
+        SPF.record || "No SPF record available.";
 
     document.getElementById("dmarcStatus").textContent =
-        security.DMARC.found ? "DMARC Detected" : "DMARC Not Found";
+        DMARC.found ? "DMARC Detected" : "DMARC Not Found";
 
     document.getElementById("dmarcPolicy").textContent =
-        "Policy: " + (security.DMARC.policy || "Unknown");
+        "Policy: " + (DMARC.policy || "Unknown");
 
     document.getElementById("dmarcRecord").textContent =
-        security.DMARC.record || "No DMARC record available.";
+        DMARC.record || "No DMARC record available.";
+}
 
 
-    }
-
-
-
+// Download PDF report
 function downloadPDF() {
-
-    console.log("Download PDF button clicked!");
 
     if (!latestDNSData) {
         alert("Please analyze a domain first.");
@@ -210,14 +279,13 @@ function downloadPDF() {
     }
 
     if (!window.jspdf || !window.jspdf.jsPDF) {
-        alert("PDF library not loaded. Check your internet connection.");
+        alert("PDF library not loaded. Check the browser console.");
         return;
     }
 
     try {
-        
-      const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
 
         const data = latestDNSData;
         let y = 20;
@@ -281,7 +349,10 @@ function downloadPDF() {
             y += 3;
         });
 
+        // Email Security Analysis
         const security = data.emailSecurity || {};
+        const SPF = security.SPF || {};
+        const DMARC = security.DMARC || {};
 
         if (y + 20 > 275) {
             doc.addPage();
@@ -295,11 +366,11 @@ function downloadPDF() {
         doc.setFontSize(10);
 
         const securityLines = [
-            `SPF: ${security.SPF?.found ? "Detected" : "Not found"}`,
-            `SPF Record: ${security.SPF?.record || "Not available"}`,
-            `DMARC: ${security.DMARC?.found ? "Detected" : "Not found"}`,
-            `DMARC Policy: ${security.DMARC?.policy || "Unknown"}`,
-            `DMARC Record: ${security.DMARC?.record || "Not available"}`
+            `SPF: ${SPF.found ? "Detected" : "Not found"}`,
+            `SPF Record: ${SPF.record || "Not available"}`,
+            `DMARC: ${DMARC.found ? "Detected" : "Not found"}`,
+            `DMARC Policy: ${DMARC.policy || "Unknown"}`,
+            `DMARC Record: ${DMARC.record || "Not available"}`
         ];
 
         securityLines.forEach(line => {
@@ -316,8 +387,6 @@ function downloadPDF() {
 
         doc.save(`DomainX-${data.domain}-Report.pdf`);
 
-        console.log("PDF generated successfully!");
-
     } catch (error) {
         console.error("PDF generation failed:", error);
         alert("Unable to generate PDF. Check the browser console.");
@@ -328,3 +397,42 @@ function downloadPDF() {
 document.getElementById("downloadReportBtn")
     .addEventListener("click", downloadPDF);
 
+
+    
+// ==============================
+// ABOUT ME POPUP FUNCTIONALITY
+// ==============================
+
+const aboutBtn = document.getElementById("aboutBtn");
+const aboutModal = document.getElementById("aboutModal");
+const closeAboutBtn = document.getElementById("closeAboutBtn");
+
+// Open About Me popup
+if (aboutBtn && aboutModal) {
+    aboutBtn.addEventListener("click", function () {
+        aboutModal.classList.add("show");
+    });
+}
+
+// Close using X button
+if (closeAboutBtn && aboutModal) {
+    closeAboutBtn.addEventListener("click", function () {
+        aboutModal.classList.remove("show");
+    });
+}
+
+// Close when clicking outside the card
+if (aboutModal) {
+    aboutModal.addEventListener("click", function (event) {
+        if (event.target === aboutModal) {
+            aboutModal.classList.remove("show");
+        }
+    });
+}
+
+// Close using Escape key
+document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && aboutModal) {
+        aboutModal.classList.remove("show");
+    }
+});

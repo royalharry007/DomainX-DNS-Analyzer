@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -12,7 +13,13 @@
 
     <nav class="navbar">
         <div class="logo">🌐 DomainX</div>
-        <span class="nav-status">DNS Analyzer</span>
+
+        <div class="navbar-right">
+            <span class="nav-status">DNS Analyzer</span>
+            <button id="aboutBtn" class="about-btn">
+                About Me
+            </button>
+        </div>
     </nav>
 
     <main class="container">
@@ -125,9 +132,9 @@
 
         </section>
 
-
         <section class="report-section">
             <h2>Diagnostic Report</h2>
+
             <button id="downloadReportBtn" disabled>
                 Download PDF Report
             </button>
@@ -137,17 +144,82 @@
             </div>
         </section>
 
-
     </main>
+
+    <!-- About Me Popup -->
+    <div id="aboutModal" class="about-modal">
+
+        <div class="about-card">
+
+            <button id="closeAboutBtn" class="close-about"
+                aria-label="Close About Me">&times;</button>
+
+            <div class="profile-header">
+
+                <img
+                    src="/images/profile.jpg"
+                    alt="Harichand Chauhan"
+                    class="profile-image"
+                >
+
+                <h2>Harichand Chauhan</h2>
+
+                <p class="profile-role">
+                    Computer Science Engineering Student
+                </p>
+
+                <p class="profile-university">
+                    Pandit Deendayal Energy University
+                </p>
+
+            </div>
+
+            <div class="profile-content">
+
+                <h3>About Me</h3>
+
+                <p>
+                    I am a Computer Science Engineering student passionate about Artifical Intelligence,
+                    web technologies,technical troubleshooting etc.
+                    I enjoy building practical applications using
+                    JavaScript and Node.js and learning how an application can help in real life.
+                    
+                </p>
+                <br>
+                <h3>Technical Skills</h3>
+
+                <div class="skills-list">
+                    <span>Artifical Intelligence</span>
+                     <span>HTML & CSS</span>
+                    <span>JavaScript</span>
+                    <span>Node.js</span>
+                    <span>Express.js</span>
+                    <span>Linux Basics</span>
+                    <span> Docker basic</span>
+                    
+                </div>
+
+                <a
+                    href="https://github.com/royalharry007/DomainX-DNS-Analyzer.git"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="github-btn"
+                >
+                    <span> Domainx Project GitHub ↗</span>
+                </a>
+
+            </div>
+
+        </div>
+
+    </div>
 
     <footer>
         © 2026 DomainX. Domain diagnostics made simple.
     </footer>
 
-    
     <script src="/vendor/jspdf.umd.min.js"></script>
     <script src="script.js"></script>
 
 </body>
-
 </html>
